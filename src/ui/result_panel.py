@@ -16,8 +16,79 @@ class ResultPanel(QWidget):
     
     def __init__(self):
         super().__init__()
+        self.is_dark_theme = False
+        self.speech_color = "#0078D4"  # Default light theme
         self.setup_ui()
         self.show_empty()
+    
+    def set_theme(self, is_dark: bool):
+        """Set the theme (dark or light)"""
+        self.is_dark_theme = is_dark
+        
+        if is_dark:
+            self.speech_color = "#5FAD65"  # Green for dark theme
+            neutral_color = "#E0E0E0"  # Light gray for dark theme
+            container_style = """
+                QFrame#resultContainer {
+                    background-color: #2A2A2A;
+                    border: 1px solid #3C3C3C;
+                    border-radius: 8px;
+                }
+            """
+            status_color = "#888888"
+            file_label_color = "#666666"
+        else:
+            self.speech_color = "#0078D4"  # Blue for light theme
+            neutral_color = "#333333"  # Dark gray for light theme
+            container_style = """
+                QFrame#resultContainer {
+                    background-color: #FAFAFA;
+                    border: 1px solid #E0E0E0;
+                    border-radius: 8px;
+                }
+            """
+            status_color = "#666666"
+            file_label_color = "#888888"
+
+        
+        self.container.setStyleSheet(container_style)
+        self.status_label.setStyleSheet(f"color: {status_color}; font-size: 14px;")
+        self.file_label.setStyleSheet(f"color: {file_label_color}; font-size: 11px;")
+        
+        # Update total card color
+        total_value = self.total_card.findChild(QLabel, "value")
+        if total_value:
+            total_value.setStyleSheet(
+                f"color: {neutral_color};"
+                "font-size: 28px;"
+                "font-weight: bold;"
+                "padding-bottom: 2px;"
+            )
+        
+        # Update speech card color
+        speech_value = self.speech_card.findChild(QLabel, "value")
+        if speech_value:
+            speech_value.setStyleSheet(
+                f"color: {self.speech_color};"
+                "font-size: 28px;"
+                "font-weight: bold;"
+                "padding-bottom: 2px;"
+            )
+        
+        # Update silence card color
+        silence_value = self.silence_card.findChild(QLabel, "value")
+        if silence_value:
+            silence_value.setStyleSheet(
+                f"color: {neutral_color};"
+                "font-size: 28px;"
+                "font-weight: bold;"
+                "padding-bottom: 2px;"
+            )
+
+        
+        # Update timeline widget theme
+        self.timeline_widget.set_theme(is_dark)
+
     
     def setup_ui(self):
         """Setup the result panel UI"""
@@ -58,7 +129,7 @@ class ResultPanel(QWidget):
         stats_layout.addWidget(self.total_card)
         
         # Speech duration
-        self.speech_card = self.create_stat_card("Speech", "#0078D4")
+        self.speech_card = self.create_stat_card("Speech", self.speech_color)
         stats_layout.addWidget(self.speech_card)
         
         # Non-speech duration
@@ -89,6 +160,7 @@ class ResultPanel(QWidget):
         self.file_label.hide()
         
         layout.addWidget(self.container)
+
 
     def create_stat_card(self, title: str, color: str) -> QWidget:
         """Create a statistics card widget"""

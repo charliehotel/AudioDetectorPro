@@ -14,6 +14,10 @@ def run_app():
     app.setApplicationName("Audio Detector Pro")
     app.setOrganizationName("AudioDetectorPro")
     
+    # Use Fusion style for consistent cross-platform theming
+    app.setStyle("Fusion")
+
+    
     # Load saved theme preference
     settings = QSettings("AudioDetectorPro", "preferences")
     theme = settings.value("theme", "light")

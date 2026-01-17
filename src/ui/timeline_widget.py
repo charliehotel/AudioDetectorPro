@@ -15,11 +15,30 @@ class TimelineWidget(QWidget):
         self.total_duration = 0.0
         self.setFixedHeight(30)
         self.setMouseTracking(True)
+        self.is_dark_theme = False
         
-        # Colors
-        self.speech_color = QColor("#0078D4")
-        self.silence_color = QColor("#E0E0E0")
-        self.hover_color = QColor("#005A9E")
+        # Default colors (light theme)
+        self._update_colors()
+    
+    def set_theme(self, is_dark: bool):
+        """Set the theme (dark or light)"""
+        self.is_dark_theme = is_dark
+        self._update_colors()
+        self.update()
+    
+    def _update_colors(self):
+        """Update colors based on theme"""
+        if self.is_dark_theme:
+            # Dark theme - green accent
+            self.speech_color = QColor("#5FAD65")
+            self.silence_color = QColor("#3C3C3C")
+            self.hover_color = QColor("#4A8A50")
+        else:
+            # Light theme - blue accent
+            self.speech_color = QColor("#0078D4")
+            self.silence_color = QColor("#E0E0E0")
+            self.hover_color = QColor("#005A9E")
+
         
     def set_data(self, segments: list[tuple[float, float]], total_duration: float):
         """Set segments data and redraw"""

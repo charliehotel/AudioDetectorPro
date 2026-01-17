@@ -19,13 +19,14 @@ class AnalysisWorker(QThread):
     finished = pyqtSignal(object)     # AnalysisResult
     error = pyqtSignal(str)           # Error message
     
-    def __init__(self, file_path: str, analyzer: VADAnalyzer, ffmpeg_manager: FFmpegManager):
+    def __init__(self, file_path: str, ffmpeg_manager: FFmpegManager, sensitivity: int = 2, frame_duration: int = 30):
         super().__init__()
         self.file_path = file_path
-        self.analyzer = analyzer
         self.ffmpeg_manager = ffmpeg_manager
+        self.analyzer = VADAnalyzer(sensitivity=sensitivity, frame_duration=frame_duration)
         self.audio_loader = AudioLoader(self.ffmpeg_manager)
         self._is_running = True
+
         
     def run(self):
         wav_path = None

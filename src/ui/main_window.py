@@ -5,10 +5,12 @@ Main Window - Audio Detector Pro
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QPushButton, QFileDialog, QMessageBox,
-    QApplication
+    QApplication, QComboBox, QFrame, QListView, QStyledItemDelegate, QStyle
 )
-from PyQt6.QtCore import Qt, QSettings
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt, QSettings, QRect
+from PyQt6.QtGui import QIcon, QPalette, QColor, QPainter, QPen, QBrush
+
+
 
 from src.ui.drop_zone import DropZone
 from src.ui.result_panel import ResultPanel
@@ -19,7 +21,62 @@ from src.core.audio_loader import AudioLoader  # Keep for format check
 from src.core.analysis_worker import AnalysisWorker
 
 
+class ComboBoxDelegate(QStyledItemDelegate):
+    """Custom delegate for QComboBox items with theme support"""
+    
+    def __init__(self, parent=None, is_dark=False):
+        super().__init__(parent)
+        self.is_dark = is_dark
+    
+    def set_dark_mode(self, is_dark):
+        self.is_dark = is_dark
+    
+    def paint(self, painter, option, index):
+        painter.save()
+        
+        # Get colors based on theme
+        if self.is_dark:
+            bg_normal = QColor("#3C3C3C")
+            bg_hover = QColor("#505050")
+            text_normal = QColor("#E0E0E0")
+            text_hover = QColor("#FFFFFF")
+        else:
+            bg_normal = QColor("#FFFFFF")
+            bg_hover = QColor("#E5F3FF")
+            text_normal = QColor("#333333")
+            text_hover = QColor("#333333")
+        
+        rect = option.rect
+        
+        # In QComboBox dropdown, mouse hover triggers State_Selected
+        # So we treat both Selected and MouseOver as hover effect
+        is_highlighted = (option.state & QStyle.StateFlag.State_Selected) or \
+                        (option.state & QStyle.StateFlag.State_MouseOver)
+        
+        if is_highlighted:
+            painter.fillRect(rect, bg_hover)
+            text_color = text_hover
+        else:
+            painter.fillRect(rect, bg_normal)
+            text_color = text_normal
+        
+        # Draw text
+        painter.setPen(QPen(text_color))
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        text_rect = rect.adjusted(10, 0, -10, 0)  # Padding
+        painter.drawText(text_rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, text)
+        
+        painter.restore()
+
+    
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setHeight(32)  # Fixed height for items
+        return size
+
+
 class MainWindow(QMainWindow):
+
     """Main application window"""
     
     def __init__(self, theme="light"):
@@ -30,8 +87,8 @@ class MainWindow(QMainWindow):
         self.analyzer = VADAnalyzer()
         
         self.setWindowTitle("Audio Detector Pro")
-        self.setMinimumSize(600, 500)
-        self.resize(700, 550)
+        self.setMinimumSize(650, 600)
+        self.resize(750, 650)
         
         self.setup_ui()
         self.apply_theme(self.current_theme)
@@ -53,10 +110,9 @@ class MainWindow(QMainWindow):
         title = QLabel("Audio Detector Pro")
         title.setObjectName("title")
         
-        # Bilingual description
-        desc_en = "Detects speech/non-speech segments using WebRTC VAD and visualizes results. Supports WAV natively; FFmpeg enables more formats."
-        desc_ko = "WebRTC VAD로 음성/비음성 구간을 검출하고 시각화합니다. WAV를 기본으로 지원하며, FFmpeg 설치 시 다양한 포맷을 지원합니다."
-        subtitle = QLabel(f"{desc_en}\n{desc_ko}")
+        # Description
+        desc = "Detects speech/non-speech segments using WebRTC VAD and visualizes results. Supports WAV natively; FFmpeg enables more formats."
+        subtitle = QLabel(desc)
         subtitle.setObjectName("subtitle")
         subtitle.setWordWrap(True)
         title_layout.addWidget(title)
@@ -72,21 +128,64 @@ class MainWindow(QMainWindow):
         
         layout.addLayout(header)
         
-        # Drop zone
+        # Configuration Section
+        config_frame = QFrame()
+        config_frame.setObjectName("configFrame")
+        config_layout = QHBoxLayout(config_frame)
+        config_layout.setContentsMargins(12, 8, 12, 8)
+        config_layout.setSpacing(16)
+        
+        # Sensitivity
+        sens_layout = QVBoxLayout()
+        sens_label = QLabel("Sensitivity")
+        sens_label.setObjectName("configLabel")
+        self.sensitivity_combo = QComboBox()
+        sens_view = QListView()
+        self.sens_delegate = ComboBoxDelegate(self, is_dark=(self.current_theme == "dark"))
+        sens_view.setItemDelegate(self.sens_delegate)
+        self.sensitivity_combo.setView(sens_view)
+        self.sensitivity_combo.addItems([
+            "0: Low (Quiet environment)",
+            "1: Normal",
+            "2: High (Recommended)",
+            "3: Max (Noisy environment)"
+        ])
+        self.sensitivity_combo.setCurrentIndex(2)
+        sens_layout.addWidget(sens_label)
+        sens_layout.addWidget(self.sensitivity_combo)
+        config_layout.addLayout(sens_layout)
+        
+        # Frame Duration
+        frame_layout = QVBoxLayout()
+        frame_label = QLabel("Frame Duration")
+        frame_label.setObjectName("configLabel")
+        self.frame_duration_combo = QComboBox()
+        frame_view = QListView()
+        self.frame_delegate = ComboBoxDelegate(self, is_dark=(self.current_theme == "dark"))
+        frame_view.setItemDelegate(self.frame_delegate)
+        self.frame_duration_combo.setView(frame_view)
+        self.frame_duration_combo.addItems([
+            "10 ms: Precise (Short speech detection)",
+            "20 ms: Balanced",
+            "30 ms: Standard (Recommended)"
+        ])
+        self.frame_duration_combo.setCurrentIndex(2)
+        frame_layout.addWidget(frame_label)
+        frame_layout.addWidget(self.frame_duration_combo)
+        config_layout.addLayout(frame_layout)
+
+
+
+        
+        layout.addWidget(config_frame)
+        
+        # Drop zone (click to browse, drag & drop to select)
         self.drop_zone = DropZone()
         self.drop_zone.file_dropped.connect(self.on_file_selected)
+        self.drop_zone.clicked.connect(self.browse_file)
         layout.addWidget(self.drop_zone)
         
-        # Browse button
-        browse_layout = QHBoxLayout()
-        browse_layout.addStretch()
-        self.browse_btn = QPushButton("Browse Files")
-        self.browse_btn.setObjectName("browseBtn")
-        self.browse_btn.clicked.connect(self.browse_file)
-        browse_layout.addWidget(self.browse_btn)
-        browse_layout.addStretch()
-        layout.addLayout(browse_layout)
-        
+
         # Result panel
         self.result_panel = ResultPanel()
         layout.addWidget(self.result_panel, 1)
@@ -109,6 +208,25 @@ class MainWindow(QMainWindow):
             self.setStyleSheet(DARK_THEME)
         else:
             self.setStyleSheet(LIGHT_THEME)
+        
+        is_dark = (theme == "dark")
+        
+        # Update combo box delegates for theme
+        if hasattr(self, 'sens_delegate'):
+            self.sens_delegate.set_dark_mode(is_dark)
+        if hasattr(self, 'frame_delegate'):
+            self.frame_delegate.set_dark_mode(is_dark)
+        
+        # Update sub-widgets theme
+        if hasattr(self, 'drop_zone'):
+            self.drop_zone.set_theme(is_dark)
+        if hasattr(self, 'result_panel'):
+            self.result_panel.set_theme(is_dark)
+
+
+
+
+
     
     def browse_file(self):
         """Open file dialog to select audio file"""
@@ -167,8 +285,12 @@ class MainWindow(QMainWindow):
         self.result_panel.show_loading()
         self.drop_zone.setEnabled(False)  # Disable drop zone during analysis
         
-        # Create and start worker
-        self.worker = AnalysisWorker(file_path, self.analyzer, self.ffmpeg_manager)
+        # Get configuration values from UI
+        sensitivity = int(self.sensitivity_combo.currentText().split(":")[0])
+        frame_duration = int(self.frame_duration_combo.currentText().split(" ")[0])
+        
+        # Create and start worker with configuration
+        self.worker = AnalysisWorker(file_path, self.ffmpeg_manager, sensitivity, frame_duration)
         self.worker.status_changed.connect(self.result_panel.show_converting_message)
         self.worker.progress_changed.connect(self.result_panel.show_converting_progress)
         self.worker.finished.connect(self.on_analysis_finished)
@@ -248,7 +370,37 @@ QProgressBar::chunk {
     background-color: #0078D4;
     border-radius: 4px;
 }
+
+QFrame#configFrame {
+    background-color: #F5F5F5;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+}
+
+QLabel#configLabel {
+    font-size: 12px;
+    font-weight: bold;
+    color: #555555;
+}
+
+QComboBox {
+    padding: 6px 10px;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 12px;
+}
+
+QComboBox:hover {
+    border-color: #0078D4;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
 """
+
+
 
 DARK_THEME = """
 QMainWindow {
@@ -278,7 +430,7 @@ QPushButton#themeToggle:hover {
 }
 
 QPushButton#browseBtn {
-    background-color: #0078D4;
+    background-color: #4A8A50;
     color: white;
     border: none;
     border-radius: 6px;
@@ -288,11 +440,11 @@ QPushButton#browseBtn {
 }
 
 QPushButton#browseBtn:hover {
-    background-color: #1084D9;
+    background-color: #5FAD65;
 }
 
 QPushButton#browseBtn:pressed {
-    background-color: #006CBE;
+    background-color: #3D7042;
 }
 
 QProgressBar {
@@ -306,7 +458,38 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-    background-color: #0078D4;
+    background-color: #5FAD65;
     border-radius: 4px;
 }
+
+QFrame#configFrame {
+    background-color: #2D2D2D;
+    border: 1px solid #3C3C3C;
+    border-radius: 8px;
+}
+
+QLabel#configLabel {
+    font-size: 12px;
+    font-weight: bold;
+    color: #AAAAAA;
+}
+
+QComboBox {
+    padding: 6px 10px;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    background-color: #3C3C3C;
+    color: #E0E0E0;
+    font-size: 12px;
+}
+
+QComboBox:hover {
+    border-color: #0078D4;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
 """
+
+
