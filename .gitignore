@@ -73,3 +73,5 @@ docs/_build/
 .vscode/
 .idea/
 *.swp
+tests/*.mp3
+tests/
