@@ -71,6 +71,3 @@
    - Hover over the **Timeline** to see precise timestamps and segment types.
    - Toggle **Dark Mode** with the button in the top-right corner.
 
-## Contributing 🤝
-
-Contributions are welcome! Please fork the repository and submit a Pull Request.
