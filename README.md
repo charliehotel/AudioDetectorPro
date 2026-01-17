@@ -2,18 +2,21 @@
 
 **Audio Detector Pro** is a desktop application that analyzes audio files to detect speech and non-speech segments using WebRTC VAD. It visualizes the results on an interactive timeline and supports various audio formats (WAV, MP3, FLAC, OGG, M4A) via FFmpeg.
 
-**Audio Detector Pro**는 WebRTC VAD를 사용하여 오디오 파일의 음성/비음성 구간을 분석하고 시각화하는 데스크탑 애플리케이션입니다. 직관적인 타임라인 UI를 제공하며 FFmpeg를 통해 다양한 오디오 포맷을 지원합니다.
-
-![Screenshot](screenshot.png)
+<p align="center">
+  <img src="screenshot%201.png" width="32%" alt="Screenshot 1">
+  <img src="screenshot%202.png" width="32%" alt="Screenshot 2">
+  <img src="screenshot%203.png" width="32%" alt="Screenshot 3">
+</p>
 
 ## Features ✨
 
 - **Speech Detection (VAD)**: Accurate speech/silence segmentation using WebRTC VAD.
-- **Timeline Visualization**: Interactive visualization of speech segments. (Speech: Blue, Silence: Grey)
+- **Fine-grained Control**: Configurable Sensitivity and Frame Duration settings.
+- **Timeline Visualization**: Interactive visualization of speech segments. (Speech: Green, Silence: Grey)
 - **Multi-format Support**: Native WAV support + MP3, FLAC, OGG, M4A support (requires FFmpeg).
 - **Auto FFmpeg Setup**: Automatically detects or downloads FFmpeg/ffprobe if missing.
-- **Drag & Drop**: Simply drag audio files into the window to analyze.
-- **Dual Theme**: Dark mode 🌙 and Light mode ☀️ support.
+- **Click & Drag**: Click to browse files or simply drag audio files into the window.
+- **Dual Theme**: Dark mode 🌙 and Light mode ☀️ support with persistent settings.
 - **Real-time Progress**: Visual progress bar for audio conversion and analysis status.
 
 ## Requirements 🛠️
@@ -58,9 +61,10 @@
    ```
 
 2. **Analyze Audio**
-   - **Drag & Drop** an audio file onto the window.
-   - Or click **Browse Files** to select a file.
+   - **Click** the drop zone area to select a file via dialog.
+   - Or **Drag & Drop** an audio file onto the window.
    - The analysis will start automatically.
+   - Adjust **Sensitivity** and **Frame Duration** for better results if needed.
 
 3. **View Results**
    - Check **Total Duration**, **Speech Duration**, and **Non-Speech Duration**.
@@ -70,7 +74,3 @@
 ## Contributing 🤝
 
 Contributions are welcome! Please fork the repository and submit a Pull Request.
-
-## License 📄
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
