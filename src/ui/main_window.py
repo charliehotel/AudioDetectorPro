@@ -87,8 +87,9 @@ class MainWindow(QMainWindow):
         self.analyzer = VADAnalyzer()
         
         self.setWindowTitle("Audio Detector Pro")
-        self.setMinimumSize(650, 600)
-        self.resize(750, 650)
+        self.setMinimumSize(650, 520)
+        self.resize(750, 560)
+
         
         self.setup_ui()
         self.apply_theme(self.current_theme)

@@ -105,10 +105,13 @@ class ResultPanel(QWidget):
                 border-radius: 8px;
             }
         """)
+        # Set fixed height to maintain consistent size before/after results
+        self.container.setFixedHeight(175)
+
         
         container_layout = QVBoxLayout(self.container)
-        container_layout.setContentsMargins(16, 12, 16, 12)
-        container_layout.setSpacing(12)  # Increased spacing for timeline
+        container_layout.setContentsMargins(16, 10, 16, 10)
+        container_layout.setSpacing(8)
         
         # Status label (for loading/empty/error states)
         self.status_label = QLabel()
@@ -122,7 +125,7 @@ class ResultPanel(QWidget):
         stats_layout.setSpacing(20)
 
         self.stats_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.stats_widget.setFixedHeight(100)
+        self.stats_widget.setFixedHeight(95)
         
         # Total duration
         self.total_card = self.create_stat_card("Total Duration", "#333333")
@@ -160,6 +163,8 @@ class ResultPanel(QWidget):
         self.file_label.hide()
         
         layout.addWidget(self.container)
+        layout.addStretch()  # Push container to top, fill remaining space below
+
 
 
     def create_stat_card(self, title: str, color: str) -> QWidget:
