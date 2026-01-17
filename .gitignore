@@ -75,3 +75,4 @@ docs/_build/
 *.swp
 tests/*.mp3
 tests/
+ROADMAP.md
